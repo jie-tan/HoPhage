@@ -124,7 +124,7 @@ When the prediction is completed, you also need to manually copy the output resu
 
 The output of HoP consists of 11 columns, representing "ID" (ID of the query phage fragment), "Score-G"(score through HoP-G), "Score-S"(score through HoP-S), "Integrated Score"(weighted average of the two scores), "Host Name"(GenebankID of the candidate host), the remaining columns are the taxonomic information of this candidate host. 
 
-![output](https://i.loli.net/2021/01/20/ZW3JuEcGTPqLRVi.png)
+![output](./output.png)
 
 
 ## Citation
