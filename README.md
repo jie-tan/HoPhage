@@ -23,13 +23,13 @@ The codes of HoP are implemented on Python 3.6. To use it, Python 3.6 together w
 
 - Python 3.6
 
-	- [numpy 1.17.4](https://pypi.org/project/numpy/)
-	- [pandas 0.25.3](https://pypi.org/project/pandas/)
-	- [biopython 1.71](https://pypi.org/project/biopython/)
-	- [llvmlite 0.30.0](https://pypi.org/project/llvmlite/)
-	- [numba 0.46.0](https://pypi.org/project/numba/)
-	- [scikit-learn 0.23.2](https://scikit-learn.org/stable/index.html)
-	- [pytorch 1.3.0](https://pytorch.org/)
+	+ [numpy 1.17.4](https://pypi.org/project/numpy/)
+	+ [pandas 0.25.3](https://pypi.org/project/pandas/)
+	+ [biopython 1.71](https://pypi.org/project/biopython/)
+	+ [llvmlite 0.30.0](https://pypi.org/project/llvmlite/)
+	+ [numba 0.46.0](https://pypi.org/project/numba/)
+	+ [scikit-learn 0.23.2](https://scikit-learn.org/stable/index.html)
+	+ [pytorch 1.3.0](https://pytorch.org/)
 
 We recommend using [Anaconda](https://www.anaconda.com/) to install python and use `conda` or `pip` to install all dependencies except pytorch. Just simply run:
 
@@ -86,7 +86,7 @@ Before using HoP to predict the host of phage fragments, you need to do some dat
 	python predict.py [-h] -q QUERY_PHAGE -c QUERY_PHAGE_CDS [-o OUTPUT_DIR]
                   [-w WEIGHT_HOP_S] [-g GENUS_RANGE] [--all]
 
-##### Options
+#### Options
 
 	-h, --help          show this help message and exit
 	-q QUERY_PHAGE      A directory containing all single query phage fragments with .fasta/.fna suffix 
@@ -100,7 +100,7 @@ Before using HoP to predict the host of phage fragments, you need to do some dat
 	-g GENUS_RANGE      A file containing host genera names of interest
 	--all               If set, scores of all genera will be outputted
 
-##### Example
+#### Example
 
 If you use HoP by Docker, you can run a just simple example from the existing file:
 
@@ -120,7 +120,7 @@ When the prediction is completed, you also need to manually copy the output resu
 
 	docker cp container_ID:/container_path local_path
 
-##### Output
+#### Output
 
 The output of HoP consists of 11 columns, representing "ID" (ID of the query phage fragment), "Score-G"(score through HoP-G), "Score-S"(score through HoP-S), "Integrated Score"(weighted average of the two scores), "Host Name"(GenebankID of the candidate host), the remaining columns are the taxonomic information of this candidate host. 
 
