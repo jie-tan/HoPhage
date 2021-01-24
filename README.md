@@ -23,13 +23,13 @@ The codes of HoP are implemented on Python 3.6. To use it, Python 3.6 together w
 
 - Python 3.6
 
- - [numpy 1.17.4](https://pypi.org/project/numpy/)
- - [pandas 0.25.3](https://pypi.org/project/pandas/)
- - [biopython 1.71](https://pypi.org/project/biopython/)
- - [llvmlite 0.30.0](https://pypi.org/project/llvmlite/)
- - [numba 0.46.0](https://pypi.org/project/numba/)
- - [scikit-learn 0.23.2](https://scikit-learn.org/stable/index.html)
- - [pytorch 1.3.0](https://pytorch.org/)
+	- [numpy 1.17.4](https://pypi.org/project/numpy/)
+	- [pandas 0.25.3](https://pypi.org/project/pandas/)
+	- [biopython 1.71](https://pypi.org/project/biopython/)
+	- [llvmlite 0.30.0](https://pypi.org/project/llvmlite/)
+	- [numba 0.46.0](https://pypi.org/project/numba/)
+	- [scikit-learn 0.23.2](https://scikit-learn.org/stable/index.html)
+	- [pytorch 1.3.0](https://pytorch.org/)
 
 We recommend using [Anaconda](https://www.anaconda.com/) to install python and use `conda` or `pip` to install all dependencies except pytorch. Just simply run:
 
