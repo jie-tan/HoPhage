@@ -1,25 +1,25 @@
 # READ ME
-HoP(Host of Phage) is a computational tool that integrates two modules respectively using the deep learning and the Markov chain model to identify the host of a given phage fragment from metagenome or metavirome data at the genus level.  
+HoPhage(Host of Phage) is a computational tool that integrates two modules respectively using the deep learning and the Markov chain model to identify the host of a given phage fragment from metagenome or metavirome data at the genus level.  
 
-## How to use HoP
+## How to use HoPhage
 
 ### Docker
 
-HoP is developed by [Python](https://www.python.org/). It was released as a [Docker image](https://hub.docker.com/repository/docker/jietan95/hop), so you can easily use HoP by installing Docker on your local machine and downloading the pre-built image of HoP. Since it is a user-friendly approach to use HoP, we highly recommend you use HoP by Docker If you are not familiar with configuring the environment of Python.
+HoPhage is developed by [Python](https://www.python.org/). It was released as a [Docker image](https://hub.docker.com/repository/docker/jietan95/hophage), so you can easily use HoPhage by installing Docker on your local machine and downloading the pre-built image of HoPhage. Since it is a user-friendly approach to use HoPhage, we highly recommend you use HoPhage by Docker If you are not familiar with configuring the environment of Python.
 
-First, you need to install [Docker](https://www.docker.com/) on your machine (Linux, Windows or MacOS is available) according to the official instructions. After that, you need to download the docker image of HoP and create a new docker container. The source code and related files used by HoP are all in the `home` folder. 
+First, you need to install [Docker](https://www.docker.com/) on your machine (Linux, Windows or MacOS is available) according to the official instructions. After that, you need to download the docker image of HoPhage and create a new docker container. The source code and related files used by HoPhage are all in the `home` folder. 
 
-	docker pull jietan95/hop:1.0
-	docker run -it jietan95/hop:1.0 bash
+	docker pull jietan95/hophage:1.0
+	docker run -it jietan95/hophage:1.0 bash
 	cd home
   
 
-The only disadvantage of using HoP through Docker is that you cannot use GPU. If you do not want to install Docker and you are proficient with Python package installation. You can use HoP by installing these acquired dependencies and downloading files of HoP by yourself as described below. 
+The only disadvantage of using HoPhage through Docker is that you cannot use GPU. If you do not want to install Docker and you are proficient with Python package installation. You can use HoPhage by installing these acquired dependencies and downloading files of HoPhage by yourself as described below. 
 
 ### Configure the operating environment yourself
 ##### Dependencies
 
-The codes of HoP are implemented on Python 3.6. To use it, Python 3.6 together with the following packages is required.
+The codes of HoPhage are implemented on Python 3.6. To use it, Python 3.6 together with the following packages is required.
 
 - Python 3.6
 
@@ -40,7 +40,7 @@ We recommend using [Anaconda](https://www.anaconda.com/) to install python and u
 	pip install numba==0.46.0
 	pip install -U scikit-learn==0.23.2
 	
-The version of pytorch may affect the use of the model, and the version used by HoP is 1.3.0. You can just follow the If your machine has a GPU, please configure the corresponding CUDA, CUDNN. Then you can check your CUDA version by `nvidia-smi`, and [downloading corresponding pytorch and torchvision](https://download.pytorch.org/whl/cu100/torch_stable.html), and then install them by `pip`.
+The version of pytorch may affect the use of the model, and the version used by HoPhage is 1.3.0. You can just follow the If your machine has a GPU, please configure the corresponding CUDA, CUDNN. Then you can check your CUDA version by `nvidia-smi`, and [downloading corresponding pytorch and torchvision](https://download.pytorch.org/whl/cu100/torch_stable.html), and then install them by `pip`.
 
 	pip install torch-1.3.0+cu100-cp36-cp36m-linux_x86_64.whl
 	pip install torchvision-0.4.1+cu100-cp36-cp36m-linux_x86_64.whl
@@ -48,17 +48,17 @@ The version of pytorch may affect the use of the model, and the version used by 
 
 ##### Downloading
 	
-After you have configured the environment required to run HoP, you can download the relevant files as follows:
+After you have configured the environment required to run HoPhage, you can download the relevant files as follows:
 
-	wget http://cqb.pku.edu.cn/ZhuLab/HoP/HoP.zip
-	unzip HoP.zip
-	cd HoP
+	wget http://cqb.pku.edu.cn/ZhuLab/HoPhage/HoPhage.zip
+	unzip HoPhage.zip
+	cd HoPhage
 
-The source code and related files used by HoP are all in this compressed file.
+The source code and related files used by HoPhage are all in this compressed file.
 
 ### Data preparation
 
-Before using HoP to predict the host of phage fragments, you need to do some data preparation, 
+Before using HoPhage to predict the host of phage fragments, you need to do some data preparation, 
 
 - [PPR-Meta](http://cqb.pku.edu.cn/ZhuLab/PPR_Meta/)
 
@@ -70,7 +70,7 @@ Before using HoP to predict the host of phage fragments, you need to do some dat
 
 - [taxize](https://www.rdocumentation.org/packages/taxize/versions/0.9.99)
 
-	Taxize is an R package for taxonomic information from around the web. If you want to use HoP with your candidate host range, a genera list are required to provide. Since you may lack the taxonomy information of prokaryotes and only have its GenBankID or RefSeqID, taxize is recommended to use for batch processing.
+	Taxize is an R package for taxonomic information from around the web. If you want to use HoPhage with your candidate host range, a genera list are required to provide. Since you may lack the taxonomy information of prokaryotes and only have its GenBankID or RefSeqID, taxize is recommended to use for batch processing.
 	
 		library(taxize)
 		# Get NCBI taxonomy UID from GenBankID.
@@ -84,7 +84,7 @@ Before using HoP to predict the host of phage fragments, you need to do some dat
 ### Usage
 
 	python predict.py [-h] -q QUERY_PHAGE -c QUERY_PHAGE_CDS [-o OUTPUT_DIR]
-                  [-w WEIGHT_HOP_S] [-g GENUS_RANGE] [--all]
+                  [-w WEIGHT_HOPhage_S] [-g GENUS_RANGE] [--all]
 
 #### Options
 
@@ -96,13 +96,13 @@ Before using HoP to predict the host of phage fragments, you need to do some dat
 						OR a file with .fasta/.fna suffix 
 						which contains all cds output of query phage fragments
 	-o OUTPUT_DIR       Output directory. The default is the current path
-	-w WEIGHT_HOP_S     Weight of HoP-S. Default = 0.5
+	-w WEIGHT_HOPhage_S     Weight of HoPhage-S. Default = 0.5
 	-g GENUS_RANGE      A file containing host genera names of interest
 	--all               If set, scores of all genera will be outputted
 
 #### Example
 
-If you use HoP by Docker, you can run a just simple example from the existing file:
+If you use HoPhage by Docker, you can run a just simple example from the existing file:
 
 	cd Prodigal-2.6.3
 	prodigal -i ../examples/phage_frag.fna -d ../examples/phage_cds.fna -p meta
@@ -110,9 +110,9 @@ If you use HoP by Docker, you can run a just simple example from the existing fi
 	mkdir output_example
 	python predict.py -q examples/phage_frag.fna -c examples/phage_cds.fna -o output_example -w 0.5 -g examples/candidate_host_genera.csv --all
 
-If you configure the operating environment yourself and use HoP, you need to download and install Prodigal before you predicting by HoP. After you obtain the gene annotation file of all query phage fragments, you can run the last two lines in the code above.
+If you configure the operating environment yourself and use HoPhage, you need to download and install Prodigal before you predicting by HoPhage. After you obtain the gene annotation file of all query phage fragments, you can run the last two lines in the code above.
 
-It is worth noting that when you run HoP in an environment configured by yourself, you can specify files in any path on your machine as input or output prediction results to any folder. But when you use Docker to run HoP, you need to copy the input file to the container.
+It is worth noting that when you run HoPhage in an environment configured by yourself, you can specify files in any path on your machine as input or output prediction results to any folder. But when you use Docker to run HoPhage, you need to copy the input file to the container.
 
 	docker cp local_path container_ID:/container_path
 
@@ -122,15 +122,15 @@ When the prediction is completed, you also need to manually copy the output resu
 
 #### Output
 
-The output of HoP consists of 11 columns, representing "ID" (ID of the query phage fragment), "Score-G"(score through HoP-G), "Score-S"(score through HoP-S), "Integrated Score"(weighted average of the two scores), "Host Name"(GenebankID of the candidate host), the remaining columns are the taxonomic information of this candidate host. 
+The output of HoPhage consists of 11 columns, representing "ID" (ID of the query phage fragment), "Score-G"(score through HoPhage-G), "Score-S"(score through HoPhage-S), "Integrated Score"(weighted average of the two scores), "Host Name"(GenebankID of the candidate host), the remaining columns are the taxonomic information of this candidate host. 
 
 ![output](https://i.loli.net/2021/01/20/ZW3JuEcGTPqLRVi.png)
 
 
 ## Citation
-Jie Tan, Zhencheng Fang, Shufang Wu, Mo Li, Qian Guo, Xiaoqing Jiang, Huaiqiu Zhu. HoP: an ab initio tool for identifying hosts of metagenomic phage fragments.
+Jie Tan, Zhencheng Fang, Shufang Wu, Mo Li, Qian Guo, Xiaoqing Jiang, Huaiqiu Zhu. HoPhage: an ab initio tool for identifying hosts of metagenomic phage fragments.
 
 ## Contact
-If you find any bugs or encounter any problems while using HoP, please feel free to contact <jie_tan@pku.edu.cn>.
+If you find any bugs or encounter any problems while using HoPhage, please feel free to contact <jie_tan@pku.edu.cn>.
 
 
