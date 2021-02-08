@@ -15,19 +15,19 @@ from sklearn import preprocessing
 min_max_scaler = preprocessing.MinMaxScaler()
 
 parser = argparse.ArgumentParser(
-    description='HoP: an ab initio tool for identifying hosts of meta-genomic phage fragments')
+    description='HoPhage: an ab initio tool for identifying hosts of meta-genomic phage fragments')
 parser.add_argument('-q', dest='query_phage', nargs=1, required=True,
-                    help='A directory containing  all single query phage fragments with .fasta/.fna suffix OR a files with .fasta/.fna suffix which contains all query phage fragments')
+                    help='A directory containing  all single query phage fragments with .fasta/.fna suffix OR a file with .fasta/.fna suffix which contains all query phage fragments')
 parser.add_argument('-c', dest='query_phage_cds', nargs=1, required=True,
-                    help='A directory containing all cds output files with .fasta/.fna suffix of single query phage fragment predicted by Prodigal OR a files with .fasta/.fna suffix which contains all cds output of query phage fragments')
+                    help='A directory containing all cds output files with .fasta/.fna suffix of single query phage fragment predicted by Prodigal OR a file with .fasta/.fna suffix which contains all cds output of query phage fragments')
 parser.add_argument('-o', dest='output_dir', nargs=1, default=[os.getcwd()],
                     help='Output directory. The default is the current path')
-parser.add_argument('-w', dest='weight_HoP_S', nargs=1, type=int, default=[0.5],
-                    help='Weight of HoP-S. Default = 0.5')
+parser.add_argument('-w', dest='weight_HoPhage_S', nargs=1, type=float, default=[0.5],
+                    help='Weight of HoPhage-S. Default = 0.5')
 parser.add_argument('-g',dest='genus_range',nargs=1, default=[None],
                     help='A file containing host genera names of interest')
 parser.add_argument('--all',action='store_true',
-                    help='If set, scores of all genera are outputted')
+                    help='If set, scores of all genera will be outputted')
 args = parser.parse_args()
 
 ##############################################################################################################
@@ -82,11 +82,11 @@ def load_data():
     if not os.path.isdir(output_dir):
         sys.exit('Output error: no such directory ' + output_dir)
 
-    # weight of HoP-S
-    weight_s = args.weight_HoP_S[0]
+    # weight of HoPhage-S
+    weight_s = args.weight_HoPhage_S[0]
     if weight_s is not None:
         if ((weight_s>1) | (weight_s<0)):
-            sys.exit('Values error: the weight of HoP-S should be a value between 0 and 1')
+            sys.exit('Values error: the weight of HoPhage-S should be a value between 0 and 1')
 
     # genus range
     genus_interest = args.genus_range[0]
@@ -95,6 +95,7 @@ def load_data():
             sys.exit('Input error: no such file ' + genus_interest + 'host genera names of interest')
         else:
             genus_range = pd.read_csv(genus_interest)
+            genus_range = genus_range['Genus'].values
     else:
         genus_range = genus_interest
 
@@ -157,7 +158,7 @@ def preprocessing(records_seq,records_cds):
     return SEQ_all,CDS_all,SEQ_01
 
 ##############################################################################################################
-# function for HoP-S
+# function for HoPhage-S
 @jit(nopython=True)
 def cals(seq_num,score,P_all):
     # lengths of some cds are not multiples of 3
@@ -193,7 +194,7 @@ def mkscore(cds_yn,P_all,CDS):
     return score
 
 ##############################################################################################################
-# function for HoP-G
+# function for HoPhage-G
 
 class Inception(nn.Module):
     def __init__(self, in_ch, out_ch1, mid_ch13, out_ch13, mid_ch15, out_ch15, out_ch_pool_conv):
@@ -315,27 +316,40 @@ def pred(loader, net, device):
 ##############################################################################################################
 # Load model
 
-def load_model(ind_dl,ind_mk):
+def load_model(ind_dl,ind_mk,device):
     print("Loading model...")
 
-    # HoP-G
+    # HoPhage-G
     net1 = MyNet()
     net2 = MyNet()
     net3 = MyNet()
-    checkpoint = torch.load('model/model_100-400.pth',
-                            map_location={'cuda:0': 'cuda:1'})
-    net1.load_state_dict(checkpoint['model_state_dict'])
-    checkpoint = torch.load('model/model_400-800.pth',
-                            map_location={'cuda:0': 'cuda:1'})
-    net2.load_state_dict(checkpoint['model_state_dict'])
-    checkpoint = torch.load('model/model_800-1200.pth',
-                            map_location={'cuda:0': 'cuda:1'})
-    net3.load_state_dict(checkpoint['model_state_dict'])
+
+    if device.type == 'cuda':
+        print("device: %s" % device)
+        # load 到GPU上
+        checkpoint = torch.load('model/model_100-400.pth')
+        net1.load_state_dict(checkpoint['model_state_dict'])
+        checkpoint = torch.load('model/model_400-800.pth')
+        net2.load_state_dict(checkpoint['model_state_dict'])
+        checkpoint = torch.load('model/model_800-1200.pth')
+        net3.load_state_dict(checkpoint['model_state_dict'])
+    else:
+        # load到CPU上
+        print("device: %s" % device)
+        checkpoint = torch.load('model/model_100-400.pth',
+                                map_location=lambda storage, loc: storage)
+        net1.load_state_dict(checkpoint['model_state_dict'])
+        checkpoint = torch.load('model/model_400-800.pth',
+                                map_location=lambda storage, loc: storage)
+        net2.load_state_dict(checkpoint['model_state_dict'])
+        checkpoint = torch.load('model/model_800-1200.pth',
+                                map_location=lambda storage, loc: storage)
+        net3.load_state_dict(checkpoint['model_state_dict'])
 
     DICODON = np.load("model/DICODON.npy")[ind_dl]
     MER = np.load("model/MER.npy")[ind_dl]
 
-    # HoP-S
+    # HoPhage-S
     MK_host = np.load('model/Plog_all5314.npy')[ind_mk]
 
     return net1,net2,net3,DICODON,MER,MK_host
@@ -348,20 +362,20 @@ if __name__ == '__main__':
     host_taxa = pd.read_csv("host_taxa_1192.csv")
     host_info = pd.read_csv("host_info_5314.csv", keep_default_na=False)
     if genus_range is not None:
-        ind_dl = host_taxa[host_taxa['genus'].isin(genus_range)].index()
-        host_taxa = host_taxa[ind_dl].reset_index()
-        ind_mk = host_info[host_info['genus'].isin(genus_range)].index()
-        host_info = host_info[ind_mk].reset_index()
+        ind_dl = host_taxa[host_taxa['genus'].isin(genus_range)].index
+        host_taxa = host_taxa.iloc[ind_dl].reset_index()
+        ind_mk = host_info[host_info['genus'].isin(genus_range)].index
+        host_info = host_info.iloc[ind_mk].reset_index()
     else:
         ind_dl = np.arange(0,len(host_taxa))
         ind_mk = np.arange(0, len(host_info))
-    net1, net2, net3, DICODON, MER, MK_host = load_model(ind_dl,ind_mk)
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    net1, net2, net3, DICODON, MER, MK_host = load_model(ind_dl,ind_mk,device)
 
     ####################################################################################
-    # Score by HoP-G
-    print("Scoring by HoP-G...")
-    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
-    print(device)
+    # Score by HoPhage-G
+    print("Scoring by HoPhage-G...")
 
     # candidate host
     DICODON = torch.from_numpy(DICODON)
@@ -473,8 +487,8 @@ if __name__ == '__main__':
     Score_dl = np.array(Score_dl)
 
     ####################################################################################
-    # Score by HoP-S
-    print("Scoring by HoP-S...")
+    # Score by HoPhage-S
+    print("Scoring by HoPhage-S...")
 
     Score_mk = []
     for i in range(len(SEQ_all)):
@@ -490,7 +504,7 @@ if __name__ == '__main__':
     Score_mk = np.array(Score_mk)
 
     ####################################################################################
-    # Integrate results from HoP-G and HoP-S
+    # Integrate results from HoPhage-G and HoPhage-S
     print("Integrating results...")
 
     # Only top 1 genus are outputted
@@ -502,20 +516,20 @@ if __name__ == '__main__':
 
         ind2 = np.where(np.array(score_dl) > 0.8)[0]
         if len(ind2) > 0:
-            # Maximum score of HoP-G is greater than 0.8
+            # Maximum score of HoPhage-G is greater than 0.8
             # w = 0.125
             genus_top = host_taxa['genus'][ind1[ind2]].values
             ind_top = host_info[host_info['genus'].isin(genus_top)].index
         else:
             ind3 = np.where(np.array(score_dl) > 0.4)[0]
             if len(ind3) > 0:
-                # Maximum score of HoP-G is between 0.4 and 0.8
+                # Maximum score of HoPhage-G is between 0.4 and 0.8
                 # w = 0.25
                 ind4 = np.where(np.array(score_dl) > 0.25)[0]
                 genus_top = host_taxa['genus'][ind1[ind4]].values
                 ind_top = host_info[host_info['genus'].isin(genus_top)].index
             else:
-                # Maximum score of HoP-G is less than 0.4
+                # Maximum score of HoPhage-G is less than 0.4
                 # w = 0.5
                 genus_top = host_taxa['genus'][ind1].values
                 ind_top = np.arange(0,len(host_info))
@@ -546,7 +560,7 @@ if __name__ == '__main__':
                 'Family':host_info['family'][ind9], 'Genus':host_info['genus'][ind9]}
         output_top1 = output_top1.append(info,ignore_index=True)
     # Save
-    output_top1.to_csv("top1_prediction.csv",index=False)
+    output_top1.to_csv(output_dir + '/' + "top1_prediction.csv",index=False)
 
     # All genera are outputted
     if args.all:
@@ -582,7 +596,7 @@ if __name__ == '__main__':
                         'Class': host_info['class'][ind9], 'Order': host_info['order'][ind9],
                         'Family': host_info['family'][ind9], 'Genus': host_info['genus'][ind9]}
                 output_temp = output_temp.append(info, ignore_index=True)
-            output_temp.to_csv(records_id[i] + "_prediction.csv", index=False)
+            output_temp.to_csv(output_dir + '/' + records_id[i] + "_prediction.csv", index=False)
 
     ####################################################################################
     print("Completed!")
