@@ -84,7 +84,7 @@ Before using HoPhage to predict the host of phage fragments, you need to do some
 ### Usage
 
 	python predict.py [-h] -q QUERY_PHAGE -c QUERY_PHAGE_CDS [-o OUTPUT_DIR]
-                  [-w WEIGHT_HOPhage_S] [-g GENUS_RANGE] [--all]
+                  [-w WEIGHT_HOPHAGE_S] [-g GENUS_RANGE] [--all]
 
 #### Options
 
@@ -96,7 +96,7 @@ Before using HoPhage to predict the host of phage fragments, you need to do some
 						OR a file with .fasta/.fna suffix 
 						which contains all cds output of query phage fragments
 	-o OUTPUT_DIR       Output directory. The default is the current path
-	-w WEIGHT_HOPhage_S     Weight of HoPhage-S. Default = 0.5
+	-w WEIGHT_HOPHAGE_S     Weight of HoPhage-S. Default = 0.5
 	-g GENUS_RANGE      A file containing host genera names of interest
 	--all               If set, scores of all genera will be outputted
 
