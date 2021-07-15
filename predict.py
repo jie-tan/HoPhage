@@ -13,6 +13,7 @@ from sklearn.preprocessing import OneHotEncoder
 enc = OneHotEncoder(dtype='uint8')
 from sklearn import preprocessing
 min_max_scaler = preprocessing.MinMaxScaler()
+import time
 
 parser = argparse.ArgumentParser(
     description='HoPhage: an ab initio tool for identifying hosts of meta-genomic phage fragments')
@@ -62,8 +63,9 @@ def load_data():
         for i in range(len(files)):
             record_cds = SeqIO.parse(query_phage_cds + '/' + files[i], "fasta")
             temp = record_cds.id.split('_')
-            if temp[0] in records_id:
-                ind = records_id.index(temp[0])
+            id = "_".join(temp[:-1])  # 因为ID中也可能存在_ 所以分割之后要再把id拼接一下
+            if id in records_id:
+                ind = records_id.index(id)
                 records_cds[ind].append(record_cds)
 
     elif os.path.isfile(query_phage_cds):
@@ -71,8 +73,9 @@ def load_data():
         records_cds = [[] for i in range(len(records_seq))]
         for i in range(len(records_cds0)):
             temp = records_cds0[i].id.split('_')
-            if temp[0] in records_id:
-                ind = records_id.index(temp[0])
+            id = "_".join(temp[:-1])  # 因为ID中也可能存在_ 所以分割之后要再把id拼接一下
+            if id in records_id:
+                ind = records_id.index(id)
                 records_cds[ind].append(records_cds0[i])
     else:
         sys.exit('Input error: no such directory or file ' + query_phage + 'containing CDSs of phage fragments')
@@ -350,17 +353,20 @@ def load_model(ind_dl,ind_mk,device):
     MER = np.load("model/MER.npy")[ind_dl]
 
     # HoPhage-S
-    MK_host = np.load('model/Plog_all5314.npy')[ind_mk]
+    MK_host = np.load('model/Plog_all.npy')[ind_mk]
 
     return net1,net2,net3,DICODON,MER,MK_host
 
 
 
 if __name__ == '__main__':
+    # t0 = time.time()
     records_id,records_seq,records_cds,output_dir,weight_s,genus_range = load_data()
     SEQ_all, CDS_all, SEQ_01 = preprocessing(records_seq,records_cds)
-    host_taxa = pd.read_csv("host_taxa_1192.csv")
-    host_info = pd.read_csv("host_info_5314.csv", keep_default_na=False)
+    host_taxa = pd.read_csv("host_taxa_1353.csv")
+    host_info_a = pd.read_csv("info_refseq_archaea.csv", delimiter='\t', keep_default_na=False)
+    host_info_b = pd.read_csv("info_refseq_bacteria.csv", delimiter='\t', keep_default_na=False)
+    host_info = pd.concat([host_info_a, host_info_b], ignore_index=True)
     if genus_range is not None:
         ind_dl = host_taxa[host_taxa['genus'].isin(genus_range)].index
         host_taxa = host_taxa.iloc[ind_dl].reset_index()
@@ -371,8 +377,11 @@ if __name__ == '__main__':
         ind_mk = np.arange(0, len(host_info))
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    # device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
     net1, net2, net3, DICODON, MER, MK_host = load_model(ind_dl,ind_mk,device)
 
+    # t1 = time.time()
+    # print("time:",(t1-t0))
     ####################################################################################
     # Score by HoPhage-G
     print("Scoring by HoPhage-G...")
@@ -442,7 +451,7 @@ if __name__ == '__main__':
                 input12 = input12.type(torch.FloatTensor)
 
                 testdataset = TensorDataset(input12, input3, input4)
-                testloader = DataLoader(testdataset, batch_size=256, shuffle=False, num_workers=0)
+                testloader = DataLoader(testdataset, batch_size=512, shuffle=False, num_workers=0)
                 # prediction
                 score_dl = pred(testloader, NET[j], device)
                 score_temp.append(score_dl)
@@ -480,12 +489,14 @@ if __name__ == '__main__':
             input12 = input12.type(torch.FloatTensor)
 
             testdataset = TensorDataset(input12, input3, input4)
-            testloader = DataLoader(testdataset, batch_size=256, shuffle=False, num_workers=0)
+            testloader = DataLoader(testdataset, batch_size=512, shuffle=False, num_workers=0)
             # 测试
             score_dl = pred(testloader, net, device)
             Score_dl.append(score_dl)
     Score_dl = np.array(Score_dl)
 
+    # t2 = time.time()
+    # print("G time:", (t2 - t1))
     ####################################################################################
     # Score by HoPhage-S
     print("Scoring by HoPhage-S...")
@@ -503,12 +514,14 @@ if __name__ == '__main__':
         Score_mk.append(score)
     Score_mk = np.array(Score_mk)
 
+    # t3 = time.time()
+    # print("S time:", (t3 - t2))
     ####################################################################################
     # Integrate results from HoPhage-G and HoPhage-S
     print("Integrating results...")
 
     # Only top 1 genus are outputted
-    output_top1 = pd.DataFrame(columns=['ID','Score-G','Score-S','Integrated Score','Host Name','Superkindom','Phylum','Class','Order','Family','Genus'])
+    output_top1 = pd.DataFrame(columns=['ID','Score-G','Score-S','Integrated Score','Host Name','Superkingdom','Phylum','Class','Order','Family','Genus'])
     for i in range(len(Score_dl)):
         score_dl = Score_dl[i]
         ind1 = np.argsort(-score_dl)
@@ -555,7 +568,7 @@ if __name__ == '__main__':
         ind8 = ind5[i_sortmk[np.where(genus_sortmk == genus_top[ind7])[0][0]]]
         ind9 = ind_top[ind8]
         info = {'ID':records_id[i], 'Score-G':score_dl[ind7], 'Score-S':score_mk[ind8], 'Integrated Score':score[0,ind7],
-                'Host Name':host_info['acession'][ind9], 'Superkindom':host_info['kingdom'][ind9], 'Phylum':host_info['phylum'][ind9],
+                'Host Name': host_info['organism_name'][ind9], 'Superkingdom': host_info['superkingdom'][ind9], 'Phylum':host_info['phylum'][ind9],
                 'Class':host_info['class'][ind9], 'Order':host_info['order'][ind9],
                 'Family':host_info['family'][ind9], 'Genus':host_info['genus'][ind9]}
         output_top1 = output_top1.append(info,ignore_index=True)
@@ -575,7 +588,7 @@ if __name__ == '__main__':
             score_mk = Score_mk[i]
             score_mk2 = np.array(sorted(score_mk, reverse=True)).reshape(-1, 1)
             # Map the score between 0 and the maximum score of A
-            score_mk3 = min_max_scaler.fit_transform(score_mk2) * score_dl[0]
+            score_mk3 = min_max_scaler.fit_transform(score_mk2) * np.max([score_dl[0],0.5])
             ind5 = np.argsort(-score_mk)
             genus_sortmk, i_sortmk = np.unique(host_info['genus'][ind_top[ind5]].values, return_index=True)
             score = np.zeros((1, len(genus_top)))
@@ -585,13 +598,13 @@ if __name__ == '__main__':
                               score_mk3[i_sortmk[np.where(genus_sortmk == genus_top[n])[0][0]]][0]
 
             ind7 = np.argsort(-score)
-            output_temp = pd.DataFrame(columns=['ID','Score-G','Score-S','Integrated Score','Host Name','Superkindom','Phylum','Class','Order','Family','Genus'])
+            output_temp = pd.DataFrame(columns=['ID','Score-G','Score-S','Integrated Score','Host Name','Superkingdom','Phylum','Class','Order','Family','Genus'])
             for n in range(len(ind7[0])):
                 ind8 = ind5[i_sortmk[np.where(genus_sortmk == genus_top[ind7[0,n]])[0][0]]]
                 ind9 = ind_top[ind8]
                 info = {'ID': records_id[i], 'Score-G': score_dl[ind7[0,n]], 'Score-S': score_mk[ind8],
                         'Integrated Score': score[0, ind7[0,n]],
-                        'Host Name': host_info['acession'][ind9], 'Superkindom': host_info['kingdom'][ind9],
+                        'Host Name': host_info['organism_name'][ind9], 'Superkingdom': host_info['superkingdom'][ind9],
                         'Phylum': host_info['phylum'][ind9],
                         'Class': host_info['class'][ind9], 'Order': host_info['order'][ind9],
                         'Family': host_info['family'][ind9], 'Genus': host_info['genus'][ind9]}
@@ -600,3 +613,5 @@ if __name__ == '__main__':
 
     ####################################################################################
     print("Completed!")
+    # t4 = time.time()
+    # print("all time:", (t4 - t0))
