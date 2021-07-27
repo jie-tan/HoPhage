@@ -9,8 +9,8 @@ HoPhage is developed by [Python](https://www.python.org/). It was released as a 
 
 First, you need to install [Docker](https://www.docker.com/) on your machine (Linux, Windows or MacOS is available) according to the official instructions. After that, you need to download the docker image of HoPhage and create a new docker container. The source code and related files used by HoPhage are all in the `home` folder. 
 
-	docker pull jietan95/hophage:1.0
-	docker run -it jietan95/hophage:1.0 bash
+	docker pull jietan95/hophage:1.1
+	docker run -it jietan95/hophage:1.1 bash
 	cd home
   
 
@@ -50,8 +50,9 @@ The version of pytorch may affect the use of the model, and the version used by 
 	
 After you have configured the environment required to run HoPhage, you can download the relevant files as follows:
 
-	wget http://cqb.pku.edu.cn/ZhuLab/HoPhage/HoPhage.zip
-	unzip HoPhage.zip
+	wget http://cqb.pku.edu.cn/ZhuLab/HoPhage/HoPhage_V_1_1.zip
+	unzip HoPhage_V_1_1.zip
+	mv HoPhage_V1_1 HoPhage
 	cd HoPhage
 
 The source code and related files used by HoPhage are all in this compressed file.
@@ -119,6 +120,14 @@ It is worth noting that when you run HoPhage in an environment configured by you
 When the prediction is completed, you also need to manually copy the output result to the outside of the container, that is, any folder on your local machine.
 
 	docker cp container_ID:/container_path local_path
+
+Notice: the Plog_all.npy in this GitHub link doesn't all pre-calculated Markov chain models. If you need our pre-calculated Markov chain models of all prokaryotes in our data set, you can download “HoPhage_S_Plog_all.zip” at “http://cqb.pku.edu.cn/ZhuLab/HoPhage/data/” and unzip it to the folder “model”. 
+
+In addition, users can use “cmm_HoPhage_S.py” to build codon Markov models of some user-defined prokaryotes. 
+
+	python cmm_HoPhage_S.py -i path_prokaryotes -o output_dir
+	# the input path should contain the genbank files of the prokaryotic genomes
+
 
 #### Output
 
