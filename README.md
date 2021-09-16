@@ -137,7 +137,7 @@ The output of HoPhage consists of 11 columns, representing "ID" (ID of the query
 
 
 ## Citation
-Jie Tan, Zhencheng Fang, Shufang Wu, Qian Guo, Xiaoqing Jiang, Huaiqiu Zhu. HoPhage: an ab initio tool for identifying hosts of phage fragments from metaviromes.
+Tan J, Fang ZC, Wu SF, Guo Q, Jiang XQ, Zhu HQ*. HoPhage: an ab initio tool for identifying hosts of phage fragments from metaviromes. Bioinformatics, 2021, DOI: 10.1093/bioinformatics/btab585.
 
 ## Contact
 If you find any bugs or encounter any problems while using HoPhage, please feel free to contact <jie_tan@pku.edu.cn>.
